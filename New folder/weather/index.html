@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <style>
+      body {
+    
+    font-family: Arial, sans-serif;
+    object-fit: contain;
+    background-color: #c6c6c6;
+    margin-top: -27px;
+    margin-left: -10px;
+    margin-right: -10px;
+    margin-bottom: -10px;
+}
+.container {
+  object-fit: cover;
+  background-image:url("image1.jpg");
+  position: relative;
+    width: 100%;
+    height: 125vh;
+    background-size:cover
+}
+h2{
+  font-size: 48px;
+  font-family:'lucida handwriting',sans-serif ;
+}
+h1 {
+  font-family: 'Lucida Handwriting',sans-serif;
+  font-size: 40px;
+  text-rendering: geometricPrecision;
+    text-align: center;
+    color: #000000;
+}
+#search-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+#city-input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 40px 0 0 40px;
+}
+#search-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    opacity: 0.9;
+    background-color: #4CAF50;
+    color: white;
+    border:px;
+    border-radius: 0 40px 40px 0;
+    cursor: pointer;
+}
+#weather-container {
+  font-weight: bolder;
+  background-image: url(image2.jpg);
+  height: 500px;
+    width: 50%;
+    margin-left: 25%;
+    align-self: center;
+    opacity: 0.6;
+    border-radius: 60px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+#current-weather {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#weather-icon {
+    width: 100px;
+    height: 100px;
+}
+#temperature {
+    font-family: 'Lucida handriting',sans-serif;
+    font-size: 48px;
+    font-weight: Bold,Italic;
+}
+#description {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+#details {
+    display: flex;
+    justify-content: space-between;
+}
+.detail {
+   font-weight: lighter;
+   font-size: 25px;
+    text-align: center;
+}
+#forecast {
+  font-display:initial;
+    font-weight: bolder;
+    display:flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 10px;
+}
+.forecast-day {
+    background-image: url(image2.jpg);
+    background-color: hsl(157, 47%, 41%);
+    opacity: 0.8;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    width: 18%;
+}
+.forecast-icon {
+    width: 50px;
+    height: 50px;
+}
+
+
+    </style>
+  </head>
+  <body>
+    <link rel="Stylesheet" href="style.css"/>
+    <div class="container">
+      <h1>Weather Forecast</h1>
+      <div id="search-container">
+        <input type="text" id="city-input" placeholder="Enter city name" />
+        <button id="search-btn">Search</button>
+      </div>
+      <div id="weather-container">
+        <div id="current-weather">
+          <div>
+            <h2 id="city-name"></h2>
+            <p id="description"></p>
+            <p id="temperature"></p>
+          </div>
+          <img id="weather-icon" src="" alt="Weather Icon" />
+        </div>
+        <div id="details">
+          <div class="detail">
+            <p>Humidity</p>
+            <p id="humidity"></p>
+          </div>
+          <div class="detail">
+            <p>Wind Speed</p>
+            <p id="wind-speed"></p>
+          </div>
+          <div class="detail">
+            <p>Precipitation</p>
+            <p id="precipitation"></p>
+          </div>
+        </div>
+      </div>
+      <div id="forecast"></div>
+    </div>
+    <script>
+      const cityInput = document.getElementById("city-input");
+      const searchBtn = document.getElementById("search-btn");
+      const cityName = document.getElementById("city-name");
+      const temperature = document.getElementById("temperature");
+      const description = document.getElementById("description");
+      const weatherIcon = document.getElementById("weather-icon");
+      const humidity = document.getElementById("humidity");
+      const windSpeed = document.getElementById("wind-speed");
+      const precipitation = document.getElementById("precipitation");
+      const forecast = document.getElementById("forecast");
+
+      const weatherCodes = {
+        0: "Clear sky",
+        1: "Mainly clear",
+        2: "Partly cloudy",
+        3: "Overcast",
+        45: "Fog",
+        48: "Depositing rime fog",
+        51: "Light drizzle",
+        53: "Moderate drizzle",
+        55: "Dense drizzle",
+        61: "Slight rain",
+        63: "Moderate rain",
+        65: "Heavy rain",
+        71: "Slight snow fall",
+        73: "Moderate snow fall",
+        75: "Heavy snow fall",
+        77: "Snow grains",
+        80: "Slight rain showers",
+        81: "Moderate rain showers",
+        82: "Violent rain showers",
+        85: "Slight snow showers",
+        86: "Heavy snow showers",
+        95: "Thunderstorm",
+        96: "Thunderstorm with slight hail",
+        99: "Thunderstorm with heavy hail",
+      };
+
+      searchBtn.addEventListener("click", () => {
+        const city = cityInput.value;
+        if (city) {
+          fetchWeather(city);
+        }
+      });
+
+      async function fetchWeather(city) {
+        try {
+          const geoResponse = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`
+          );
+          const geoData = await geoResponse.json();
+
+          if (geoData.results && geoData.results.length > 0) {
+            const { latitude, longitude, name } = geoData.results[0];
+            cityName.textContent = name;
+
+            const weatherResponse = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`
+            );
+            const weatherData = await weatherResponse.json();
+
+            displayWeather(weatherData);
+            displayForecast(weatherData);
+          } else {
+            alert("City not found. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error fetching weather data:", error);
+        }
+      }
+
+      function displayWeather(data) {
+        const current = data.current;
+        temperature.textContent = `${Math.round(current.temperature_2m)}°C`;
+        description.textContent = weatherCodes[current.weather_code];
+        weatherIcon.src = getWeatherIcon(current.weather_code);
+        humidity.textContent = `${current.relative_humidity_2m}%`;
+        windSpeed.textContent = `${current.wind_speed_10m} km/h`;
+        precipitation.textContent = `${current.precipitation} mm`;
+      }
+
+      function displayForecast(data) {
+        forecast.innerHTML = "";
+        const dailyData = data.daily;
+
+        for (let i = 0; i < 5; i++) {
+          const date = new Date(dailyData.time[i]);
+          const dayName = date.toLocaleDateString("en-US", {
+            weekday: "short",
+          });
+          const maxTemp = Math.round(dailyData.temperature_2m_max[i]);
+          const minTemp = Math.round(dailyData.temperature_2m_min[i]);
+          const icon = getWeatherIcon(dailyData.weather_code[i]);
+
+          const forecastDay = document.createElement("div");
+          forecastDay.classList.add("forecast-day");
+          forecastDay.innerHTML = `
+                    <p>${dayName}</p>
+                    <img class="forecast-icon" src="${icon}" alt="Weather Icon">
+                    <p>${maxTemp}°C / ${minTemp}°C</p>
+                `;
+          forecast.appendChild(forecastDay);
+        }
+      }
+
+      function getWeatherIcon(code) {
+        // This is a simple mapping. You might want to create more detailed mappings.
+        if (code === 0 || code === 1)
+          return "https://openweathermap.org/img/wn/01d@2x.png"; // Clear
+        if (code === 2) return "https://openweathermap.org/img/wn/02d@2x.png"; // Partly cloudy
+        if (code === 3) return "https://openweathermap.org/img/wn/03d@2x.png"; // Overcast
+        if (code >= 51 && code <= 65)
+          return "https://openweathermap.org/img/wn/10d@2x.png"; // Rain
+        if (code >= 71 && code <= 77)
+          return "https://openweathermap.org/img/wn/13d@2x.png"; // Snow
+        if (code >= 95) return "https://openweathermap.org/img/wn/11d@2x.png"; // Thunderstorm
+        return "https://openweathermap.org/img/wn/50d@2x.png"; // Default (fog, mist, etc.)
+      }
+
+      // Fetch weather for a default city on page load
+      fetchWeather("Calcutta");
+    </script>
+  </body>
+</html>
